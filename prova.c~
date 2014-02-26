@@ -3,7 +3,7 @@
 
 int main (void)
 {
-  printf("Rimboccatevi le maniche, stronzi vaffanculo.");
+  printf("Rimboccatevi le maniche, stronzi.");
   
   return 0;
 }
