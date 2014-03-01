@@ -5,7 +5,7 @@ int main (void)
 {
   printf("Rimboccatevi le maniche, stronzi.");
   
-  int ipselon = 0;
+  int ipselon = 0;//ciao
   
   while(true)
     ipselon++;
