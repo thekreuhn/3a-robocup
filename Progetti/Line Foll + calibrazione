@@ -1,0 +1,87 @@
+int calibrazione (int &max, int &min)
+{
+     int threshold;
+     int valore;
+     unsigned long end_time;
+
+     SetSensorLight(IN_1);
+     Wait(200);
+
+     // calibration: turn left
+
+     end_time = CurrentTick() + 500;
+     OnFwd(OUT_B, 50);
+     OnRev(OUT_C, 50);
+     
+     while (CurrentTick() < end_time)
+     {
+         valore = Sensor(IN_1);
+         if (valore > max)
+             max = valore;
+         else if (valore < min)
+             min = valore;
+     }
+
+     // calibration: turn right
+
+     end_time = CurrentTick() + 1000;
+     OnFwd(OUT_C, 50);
+     OnRev(OUT_B, 50);
+     
+     while (CurrentTick() < end_time)
+     {
+         valore = Sensor(IN_1);
+         if (valore > max)
+             max = valore;
+         else if (valore < min)
+             min = valore;
+     }
+
+     threshold = (min+max)/2;
+
+     ClearLine(LCD_LINE3);
+     NumOut(40, LCD_LINE3, threshold);
+
+     // calibration done, find the edge of the line
+
+     OnFwd(OUT_B, 50);
+     OnRev(OUT_C, 50);
+     while (Sensor(IN_1) > threshold)
+     {
+     }
+     Off(OUT_BC);
+     
+     return threshold;
+}
+
+
+
+task main() {
+     int valore;
+     int turn;
+     int threshold;
+     int power = 15;
+     int min = 999;
+     int max = -1;
+     
+     threshold = calibrazione(max, min);
+     while (true)
+     {
+         valore = Sensor(IN_1);
+
+         turn = power+200*(threshold-valore)/(max-min);
+         if (turn > 100)
+            turn = 100;
+         if (turn < 0)
+            turn = 0;
+         OnFwd(OUT_B, turn);                   // se B - C gira DX
+         turn = power-200*(threshold-valore)/(max-min);
+         if (turn > 100)
+            turn = 100;
+         if (turn < 0)
+            turn = 0;
+         OnFwd(OUT_C, turn);
+         
+         }
+     
+}
