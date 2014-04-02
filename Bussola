@@ -1,0 +1,46 @@
+#define UP 1
+#define RIGHT 2
+#define DOWN 3
+#define LEFT 4
+
+int normDeg(int val) {
+     if(val > 359)
+           val -= 360;
+     else if(val < 0)
+            val += 360;
+     return val;
+}
+
+int sensorCompass(int realUp) {
+     return normDeg(SensorHTCompass(S2) - realUp);
+}
+
+int currentDir(int dir) {
+    if((dir >= 315 || dir <= 45))
+            return UP;
+
+    else if((dir > 45 && dir < 135))
+            return RIGHT;
+
+    else if((dir >= 135 && dir <= 225))
+            return DOWN;
+
+    else    return LEFT;
+}
+
+task main() {
+
+     SetSensorLowspeed(S2);
+     
+     int realUp = SensorHTCompass(S2);
+     int compass;
+
+     while(1) {
+              compass = sensorCompass(realUp);
+              NumOut(0, LCD_LINE4, compass);
+              NumOut(0, LCD_LINE5, currentDir(compass));
+              Wait(200);
+              ClearScreen();
+     }
+     
+}
