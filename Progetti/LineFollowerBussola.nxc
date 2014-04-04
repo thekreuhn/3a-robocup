@@ -1,0 +1,132 @@
+#define UP    1
+#define RIGHT 2
+#define DOWN  3
+#define LEFT  4
+
+#define S_COMP S4
+#define S_LGH1 S1
+#define S_LGH2 S2
+
+int realUp;
+
+void calibCompass() {
+     realUp = SensorHTCompass(S_COMP);
+}
+
+int normDeg(int val) {
+     if(val > 359)
+           val -= 360;
+     else if(val < 0)
+            val += 360;
+     return val;
+}
+
+int sensorCompass() {
+     return normDeg(SensorHTCompass(S_COMP) - realUp);
+}
+
+byte currentDir(int dir) {
+    /*if((dir >= 315 || dir <= 45))
+            return UP;
+
+    else if((dir > 45 && dir < 135))
+            return RIGHT;
+
+    else if((dir >= 135 && dir <= 225))
+            return DOWN;
+
+    else    return LEFT;*/
+    if((dir >= 340 || dir <= 20))
+            return UP;
+
+    else if((dir > 20 && dir < 135))
+            return RIGHT;
+
+    else if((dir >= 135 && dir <= 225))
+            return DOWN;
+
+    else    return LEFT;
+}
+
+task main() {
+
+    //################## Inizializzazione #####################
+
+    SetSensorLowspeed(S_COMP);
+    SetSensorLight(S_LGH1);
+    SetSensorLight(S_LGH2);
+    
+    int lightS1;
+    int lightS2;
+    
+    unsigned short timer = 0;
+    
+    calibCompass();
+    
+    //################ Fine inizializzazione ##################
+    
+
+
+    //################## Inizio main loop #####################
+
+    while(1) {
+        lightS1 = Sensor(IN_1);
+        lightS2 = Sensor(IN_2);
+
+        if(lightS1 < 40 && lightS2 < 40) {
+            //Entrambi su nero
+            while(lightS1 < 40 && lightS2 < 40) {
+                 lightS1 = Sensor(IN_1);
+                 lightS2 = Sensor(IN_2);
+                 OnFwd(OUT_A, 100);
+                 OnRev(OUT_C, 100);
+            }
+            Off(OUT_AC);
+        }
+        
+        else if(lightS1 < 40) {
+            //Principale su nero
+            calibCompass();
+            timer = 0;
+            while(lightS1 < 40) {
+                 lightS1 = Sensor(IN_1);
+                 lightS2 = Sensor(IN_2);
+                      while(lightS2 < 40) {
+                           lightS2 = Sensor(IN_2);
+                           OnFwd(OUT_C, 80);
+                           OnRev(OUT_A, 80);
+                      }
+                 OnFwd(OUT_C, 40);
+                 OnRev(OUT_A, 15);
+            }
+            Off(OUT_AC);
+        }
+        
+        else {
+            //Principale su bianco
+            while(lightS1 >= 40) {
+                 lightS1 = Sensor(IN_1);
+                 timer++;
+                 if(timer > 6000) {
+                       Off(OUT_AC);
+                       while(currentDir(sensorCompass()) != UP) {
+                            OnFwd(OUT_C, 60);
+                            OnRev(OUT_A, 60);
+                       }
+                       lightS1 = Sensor(IN_1);
+                       while(lightS1 >= 40) {
+                            lightS1 = Sensor(IN_1);
+                            OnFwd(OUT_AC, 30);
+                       }
+                 }
+                 OnFwd(OUT_A, 40);
+                 OnRev(OUT_C, 15);
+            }
+            Off(OUT_AC);
+        }
+    }
+
+    //################### Fine main loop ######################
+    
+
+}
