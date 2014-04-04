@@ -9,9 +9,9 @@
 
 int realUp;
 
-void calibCompass() {
+/*void calibCompass() {
      realUp = SensorHTCompass(S_COMP);
-}
+}*/
 
 int normDeg(int val) {
      if(val > 359)
@@ -61,7 +61,7 @@ task main() {
     
     unsigned short timer = 0;
     
-    calibCompass();
+    realUp = SensorHTCompass(S_COMP);
     
     //################ Fine inizializzazione ##################
     
@@ -86,7 +86,7 @@ task main() {
         
         else if(lightS1 < 40) {
             //Principale su nero
-            calibCompass();
+            realUp = SensorHTCompass(S_COMP);
             timer = 0;
             while(lightS1 < 40) {
                  lightS1 = Sensor(IN_1);
