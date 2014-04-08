@@ -1,0 +1,106 @@
+#define S_US S3
+#define S_COMP S4
+#define V 15
+#define ROTATETIME 16700
+
+unsigned short rescueN;
+mutex order;
+
+void findN()
+{
+ RotateMotor(OUT_A, 50, -360);
+
+ if(SensorUS(S_US) < 20)
+      RotateMotor(OUT_A, 50, 540);
+ else
+      RotateMotor(OUT_A, 50, 180);
+
+  rescueN = SensorHTCompass(S_COMP);
+ 
+ }
+
+task goNLeave()
+{
+  OnFwdSync(OUT_AC, 50, -1);
+  while (SensorUS(S_US) < 15) {}
+  Off(OUT_AC);
+  //LASCIA
+  PlaySound("beep");
+  StopAllTasks();
+}
+
+task findOb()
+{
+  while(1)  {
+   if(SensorUS(S_US) < 15)
+   {
+    Acquire(order);
+    Stop(true);
+    //EXIT TO CATCH
+    OnFwdSync(OUT_AC, 50, -1);
+   // StopTask (main);
+    ExitTo(goNLeave);
+   }
+   }
+}
+
+
+task main()
+{
+  SetSensorUltrasonic(S_US);
+  SetSensorLowspeed(S_COMP);
+
+  int startT;
+  int nowT;
+  int backstart;
+  int backend;
+  unsigned short objdir;
+  
+  findN();
+
+  Off(OUT_AC);
+  
+  NumOut(0, LCD_LINE5, rescueN);
+  Wait(1000);
+
+  Acquire (order);
+  Release(order);                 /* Condivide il gettone e fa partire ricerca*/
+  StartTask(findOb);
+  
+  OnFwdSync(OUT_AC, 50, -1);
+  Wait((68/V)*1000);
+  Off(OUT_AC);                        /*Raggiunge il centro della stanza*/
+  StopTask(findOb);
+  startT = CurrentTick();
+
+  OnFwd(OUT_C, 20);
+
+   do{
+   if (SensorUS(S_US) < 30)
+   {
+    Off(OUT_AC);
+    objdir = SensorUS(S_US);                        */Vai verso l'oggetto*/
+    backstart = CurrentTick();
+    OnFwdSync(OUT_AC, 50, -1);
+    while(SensorUS(S_US) > 15) {}
+    Off(OUT_AC);
+    backend = CurrentTick();
+    
+    // PRENDI L'OGGETTO                               //Ritorna sull'asse
+    OnRevSync(OUT_AC, 50, -1);
+    Wait(backend - backstart);
+    Off(OUT_AC);
+    RotateMotor(OUT_C, 30, objdir - rescueN);
+    Off(OUT_AC);
+    break;
+   }
+   nowT = CurrentTick();
+  }
+  while (nowT - startT < ROTATETIME);
+
+  ExitTo(goNLeave);
+  //RILASCIA OGGETTO
+  
+
+}
+
