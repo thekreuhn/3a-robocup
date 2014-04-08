@@ -1,0 +1,66 @@
+#define S_US S4
+#define RANGE_US 20
+
+mutex order;
+
+task readUS() {
+
+     byte valueUS;
+     byte firstDist;
+     
+     while(1) {
+         valueUS = SensorUS(S_US);
+
+         if(valueUS < RANGE_US) {
+         Acquire(order);
+
+         Off(OUT_AC);
+         
+         while(firstDist <= RANGE_US + 10)
+         {
+             RotateMotor(OUT_A, 50, -360);
+             OnFwd(OUT_AC, 30);
+             Wait(1000);
+             Off(OUT_AC);
+             RotateMotor(OUT_A, 50, 360);
+             firstDist = SensorUS(S_US);
+         }
+         
+         OnFwd(OUT_AC, 40);
+         Wait(2000);
+         Off(OUT_AC);
+         
+         do
+         {
+             RotateMotor(OUT_C, 50, -360);
+             OnFwd(OUT_AC, 30);
+             Wait(1000);
+             Off(OUT_AC);
+             RotateMotor(OUT_C, 50, 360);
+             firstDist = SensorUS(S_US);
+         } while(firstDist <= RANGE_US + 10)
+         
+         OnFwd(OUT_AC, 40);
+
+         Release(order);
+
+         }
+     }
+}
+
+task follow() {
+
+     while(1) {
+         Acquire(order);
+         OnFwd(OUT_AC, 50);
+         Release(order);
+     }
+
+}
+
+task main() {
+
+     SetSensorUltrasonic(S_US);
+     
+     Precedes(readUS, follow);
+}
